@@ -1,0 +1,46 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# --- Środowiska wirtualne ---
+.venv/
+venv/
+env/
+.env
+.env.*
+
+# --- Testy / narzędzia ---
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.tox/
+
+# --- Streamlit (sekrety — nigdy nie commituj haseł) ---
+.streamlit/secrets.toml
+
+# --- IDE / system ---
+.idea/
+.vscode/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# --- Jupyter ---
+.ipynb_checkpoints/
+
+# --- Wyniki generowane przez run_experiment.py ---
+# Odkomentuj poniższe linie, jeśli NIE chcesz trzymać wygenerowanych plików w repozytorium
+# (np. duże HTML Plotly). Domyślnie folder results/ może być commitowany razem z projektem.
+# results/*.csv
+# results/*.tex
+# results/wersje_bibliotek.txt
+# results/wykresy/
