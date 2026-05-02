@@ -2,13 +2,29 @@
 
 ## Krótki opis
 
-- **Zbiór:** [Wine Quality](https://www.kaggle.com/datasets/yasserh/wine-quality-dataset) (`data/WineQT.csv`) — **klasyfikacja wieloklasowa** etykiety `quality` (np. oceny 3–8).
+- **Zbiór:** [Wine Quality](https://www.kaggle.com/datasets/yasserh/wine-quality-dataset) (`data/WineQT.csv`) — **klasyfikacja wieloklasowa** etykiety `quality` (oceny 3–8, niezbalansowane klasy).
 - **Modele:** `DecisionTree`, `kNN`, `RandomForest` — **po 3 warianty hiperparametrów** (łącznie 9 klasyfikatorów).
-- **Zespół:** `VotingClassifier` z **majority voting** (`voting="hard"`) nad tymi samymi 9 pipeline’ami (MinMaxScaler + klasyfikator).
-- **Bez przecieku:** `MinMaxScaler` w `Pipeline` / `ColumnTransformer`, dopasowanie wyłącznie na treningu każdej foldy.
-- **Walidacja:** stratyfikowana **5-fold** CV (`StratifiedKFold`, stały `random_state`).
-- **Metryki:** `accuracy`, `balanced_accuracy`.
+- **Zespół predykcyjny:** `VotingClassifier` z **majority voting** (`voting="hard"`) nad tymi samymi 9 pipeline’ami.
+- **Walidacja:** stratyfikowana **5-fold** CV (`StratifiedKFold(shuffle=True, random_state=42)`).
+- **Metryki:** `accuracy` (odsetek poprawnych predykcji) oraz `balanced_accuracy` (średnia czułość po klasach — ważna przy niezbalansowanym rozkładzie ocen wina).
 - **Stack:** scikit-learn, Pandas (`groupby`, `to_latex`), Plotly (wykresy), Streamlit (opis przebiegu badania, definicje pojęć, zgodność z wymaganiami, podgląd `.tex`).
+
+## Zabezpieczenie przed przeciekiem danych (data leakage)
+
+Wszystkie operacje skalowania wykonywane są **wewnątrz** obiektu `Pipeline` (scikit-learn):
+
+```
+Pipeline([
+    ("preprocess", ColumnTransformer([("num", MinMaxScaler(), feature_cols)])),
+    ("clf", klasyfikator),
+])
+```
+
+Dzięki temu `MinMaxScaler` jest **fitowany wyłącznie na folddzie treningowej** — nigdy nie „widzi" danych testowych przed oceną. Przekazanie gotowego `Pipeline` do `cross_validate` gwarantuje to automatycznie dla każdego z 5 podziałów. Szczegóły: [scikit-learn — Common pitfalls](https://scikit-learn.org/stable/common_pitfalls.html).
+
+## Brak brakujących danych
+
+Funkcja `wczytaj_pelna_ramke` w `src/experiment.py` wywołuje `df.isna().any().any()` i podnosi wyjątek, jeśli znajdzie brakujące wartości — eksperyment nie uruchomi się na niekompletnym zbiorze.
 
 ## Wymagania
 
@@ -49,10 +65,14 @@ start.bat
 | **Zbiór danych (EDA)** | Rozkład klasy `quality`, macierz korelacji, podgląd danych |
 | **Wyniki klasyfikacji** | Wykresy metryk z CV, tabele, podgląd i pobieranie wyników |
 
-## Odtwarzalność
+## Odtwarzalność wyników (reproducibility)
 
-- Seed: `RANDOM_STATE` w `src/config.py`; ten sam obiekt `cv` w `cross_validate` ([Common pitfalls — scikit-learn](https://scikit-learn.org/stable/common_pitfalls.html)).
-- Plik `results/wersje_bibliotek.txt` zapisuje wersje bibliotek użytych przy generowaniu wyników.
+Zgodnie z wymaganiem [scikit-learn — Getting reproducible results](https://scikit-learn.org/stable/common_pitfalls.html):
+
+- Jeden stały seed: `RANDOM_STATE = 42` w `src/config.py`; przekazany do każdego klasyfikatora (`random_state`) oraz do `StratifiedKFold(shuffle=True, random_state=RANDOM_STATE)`.
+- `StratifiedKFold` z `shuffle=True` wymaga seeda — bez niego kolejność próbek po tasowaniu byłaby inna przy każdym uruchomieniu.
+- Ten sam obiekt `cv` przekazywany jest do każdego wywołania `cross_validate`, co gwarantuje identyczne podziały dla wszystkich modeli.
+- Plik `results/wersje_bibliotek.txt` zapisuje wersje scikit-learn, numpy i pandas przy generowaniu wyników — umożliwia odtworzenie środowiska.
 
 ## Struktura repozytorium
 
