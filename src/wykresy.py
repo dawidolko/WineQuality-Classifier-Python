@@ -1,8 +1,8 @@
 """
-Wykresy Plotly do prezentacji zbioru oraz wyników walidacji krzyżowej.
+Plotly charts presenting the dataset and the cross-validation results.
 
-Używane w aplikacji Streamlit oraz zapisywane jako HTML do katalogu results/wykresy/
-po uruchomieniu pełnego eksperymentu.
+Used in the Streamlit app and saved as HTML to the results/wykresy/ directory
+after running the full experiment.
 """
 
 from __future__ import annotations
@@ -17,19 +17,19 @@ from plotly.subplots import make_subplots
 
 def wykres_rozkald_jakosci(df: pd.DataFrame, kolumna_jakosci: str = "quality") -> go.Figure:
     """
-    Histogram / słupki liczebności klas jakości wina (zadanie klasyfikacji wieloklasowej).
+    Histogram / bar counts of wine quality classes (a multiclass classification task).
     """
     vc = df[kolumna_jakosci].value_counts().sort_index()
     fig = px.bar(
         x=vc.index.astype(str),
         y=vc.values,
-        labels={"x": "Klasa jakości (etykieta)", "y": "Liczba próbek"},
-        title="Rozkład etykiety „quality” w zbiorze",
+        labels={"x": "Quality class (label)", "y": "Number of samples"},
+        title="Distribution of the “quality” label in the dataset",
         color_discrete_sequence=["#2E86AB"],
     )
     fig.update_layout(
-        xaxis_title="Jakość (klasa)",
-        yaxis_title="Liczba obserwacji",
+        xaxis_title="Quality (class)",
+        yaxis_title="Number of observations",
         showlegend=False,
         template="plotly_white",
         height=420,
@@ -39,7 +39,7 @@ def wykres_rozkald_jakosci(df: pd.DataFrame, kolumna_jakosci: str = "quality") -
 
 def wykres_macierz_korelacji(df: pd.DataFrame, kolumny_numeryczne: list[str]) -> go.Figure:
     """
-    Mapa ciepła korelacji Pearsona między cechami numerycznymi (w tym etykieta).
+    Heatmap of Pearson correlations between numeric features (including the label).
     """
     sub = df[kolumny_numeryczne].select_dtypes(include=["number"])
     corr = sub.corr(numeric_only=True)
@@ -50,7 +50,7 @@ def wykres_macierz_korelacji(df: pd.DataFrame, kolumny_numeryczne: list[str]) ->
         color_continuous_scale="RdBu_r",
         zmin=-1,
         zmax=1,
-        title="Macierz korelacji (cechy numeryczne)",
+        title="Correlation matrix (numeric features)",
     )
     fig.update_layout(height=560, template="plotly_white")
     return fig
@@ -60,18 +60,18 @@ def _etykieta_wykresu(wiersz: pd.Series) -> str:
     rodz = str(wiersz.get("rodzina", ""))
     model = str(wiersz.get("model", ""))
     if rodz == "Ensemble":
-        return "Zespół (Majority Voting)"
+        return "Ensemble (Majority Voting)"
     return f"{rodz}: {model}"
 
 
 def wykres_porownanie_metryk(szczegoly: pd.DataFrame) -> go.Figure:
     """
-    Słupki: średnia accuracy i balanced accuracy dla każdego wariantu i zespołu
-    (z paskami błędu = std z foldów).
+    Bars: mean accuracy and balanced accuracy for every variant and the ensemble
+    (error bars = std across folds).
     """
     df = szczegoly.copy()
     df["etykieta"] = df.apply(_etykieta_wykresu, axis=1)
-    # Kolejność: rodziny grupowo, na końcu zespół
+    # Order: families grouped, ensemble last
     df["_sort"] = df["rodzina"].map(
         {"DecisionTree": 0, "kNN": 1, "RandomForest": 2, "Ensemble": 3}
     ).fillna(9)
@@ -80,7 +80,7 @@ def wykres_porownanie_metryk(szczegoly: pd.DataFrame) -> go.Figure:
     fig = make_subplots(
         rows=1,
         cols=2,
-        subplot_titles=("Accuracy (średnia ± std z 5 foldów)", "Balanced accuracy (średnia ± std)"),
+        subplot_titles=("Accuracy (mean ± std over 5 folds)", "Balanced accuracy (mean ± std)"),
         horizontal_spacing=0.08,
     )
 
@@ -134,7 +134,7 @@ def wykres_porownanie_metryk(szczegoly: pd.DataFrame) -> go.Figure:
     fig.update_yaxes(title_text="Balanced accuracy", row=1, col=2, range=[0, 1.05])
 
     fig.update_layout(
-        title_text="Porównanie modeli bazowych (9 wariantów) i zespołu Majority Voting — klasyfikacja",
+        title_text="Comparison of base models (9 variants) and the Majority Voting ensemble — classification",
         template="plotly_white",
         height=520,
         margin=dict(b=120),
@@ -144,12 +144,12 @@ def wykres_porownanie_metryk(szczegoly: pd.DataFrame) -> go.Figure:
 
 def wykres_agregaty_rodzin(agg: pd.DataFrame) -> go.Figure:
     """
-    Średnia vs maksimum metryk w obrębie trzech rodzin (DecisionTree, kNN, RandomForest).
+    Mean vs maximum of metrics within the three families (DecisionTree, kNN, RandomForest).
     """
     fig = go.Figure()
     fig.add_trace(
         go.Bar(
-            name="Średnia accuracy (3 warianty)",
+            name="Mean accuracy (3 variants)",
             x=agg["rodzina"],
             y=agg["accuracy_srednia"],
             marker_color="#5C4D7D",
@@ -157,7 +157,7 @@ def wykres_agregaty_rodzin(agg: pd.DataFrame) -> go.Figure:
     )
     fig.add_trace(
         go.Bar(
-            name="Maks. accuracy (3 warianty)",
+            name="Max accuracy (3 variants)",
             x=agg["rodzina"],
             y=agg["accuracy_max"],
             marker_color="#8F7EAF",
@@ -165,7 +165,7 @@ def wykres_agregaty_rodzin(agg: pd.DataFrame) -> go.Figure:
     )
     fig.add_trace(
         go.Bar(
-            name="Średnia balanced acc.",
+            name="Mean balanced acc.",
             x=agg["rodzina"],
             y=agg["balanced_accuracy_srednia"],
             marker_color="#C17C74",
@@ -173,7 +173,7 @@ def wykres_agregaty_rodzin(agg: pd.DataFrame) -> go.Figure:
     )
     fig.add_trace(
         go.Bar(
-            name="Maks. balanced acc.",
+            name="Max balanced acc.",
             x=agg["rodzina"],
             y=agg["balanced_accuracy_max"],
             marker_color="#E8A09A",
@@ -181,8 +181,8 @@ def wykres_agregaty_rodzin(agg: pd.DataFrame) -> go.Figure:
     )
     fig.update_layout(
         barmode="group",
-        title="Agregacja po rodzinie modelu — średnie i maksima z trzech wariantów hiperparametrów",
-        yaxis_title="Wartość metryki",
+        title="Aggregation by model family — means and maxima over three hyperparameter variants",
+        yaxis_title="Metric value",
         template="plotly_white",
         height=460,
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
@@ -197,7 +197,7 @@ def zapisz_wykresy_html(
     katalog: Path,
 ) -> None:
     """
-    Zapisuje wykresy jako samodzielne pliki HTML w katalogu results/wykresy/.
+    Saves the charts as standalone HTML files in the results/wykresy/ directory.
     """
     out = katalog / "wykresy"
     out.mkdir(parents=True, exist_ok=True)

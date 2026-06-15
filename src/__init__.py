@@ -1,1 +1,1 @@
-# Pakiet źródłowy projektu klasyfikacji jakości wina.
+# Source package for the wine quality classification project.

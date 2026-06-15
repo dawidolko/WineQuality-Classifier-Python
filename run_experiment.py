@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Skrypt uruchamiający pełny eksperyment z katalogu głównego repozytorium.
+Script that runs the full experiment from the repository root.
 
-Użycie (z katalogu projektu):
+Usage (from the project directory):
     python run_experiment.py
 """
 
@@ -11,7 +11,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-# Umożliwia import pakietu `src` przy uruchomieniu pliku bez instalacji jako pakietu
+# Allows importing the `src` package when running the file without installing it as a package
 ROOT = Path(__file__).resolve().parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
@@ -20,15 +20,15 @@ from src.experiment import uruchom_pelny_eksperyment  # noqa: E402
 
 
 def main() -> None:
-    print("Ewaluacja modeli (moze potrwac kilka minut)...")
+    print("Evaluating models (this may take a few minutes)...")
     szczegoly, grupy, zespol = uruchom_pelny_eksperyment()
-    print("\n--- Podsumowanie (fragment) ---")
+    print("\n--- Summary (excerpt) ---")
     print(szczegoly.to_string(index=False))
-    print("\n--- Agregaty rodzin ---")
+    print("\n--- Family aggregates ---")
     print(grupy.to_string(index=False))
-    print("\n--- Zespol (Majority Voting) ---")
+    print("\n--- Ensemble (Majority Voting) ---")
     print(zespol.to_string(index=False))
-    print("\nZapisano w results/: CSV, LaTeX (.tex), wykresy HTML (wykresy/), wersje_bibliotek.txt")
+    print("\nSaved to results/: CSV, LaTeX (.tex), HTML charts (wykresy/), wersje_bibliotek.txt")
 
 
 if __name__ == "__main__":

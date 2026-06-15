@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-Aplikacja Streamlit: checklista wymogów, EDA (wykresy), wyniki klasyfikacji, pobieranie plików.
+Streamlit app: requirements checklist, EDA (charts), classification results, file downloads.
 
-Uruchomienie z katalogu projektu:
+Run from the project directory:
     streamlit run streamlit_app.py
 
-Skrypty start.sh / start.bat najpierw uruchamiają run_experiment.py (pełne wyniki w results/).
+The start.sh / start.bat scripts first run run_experiment.py (full results in results/).
 """
 
 from __future__ import annotations
@@ -34,16 +34,16 @@ TEX_AGREGATY = RESULTS_DIR / "wyniki_agregaty_rodzin.tex"
 
 
 def wyswietl_plik_tex(sciezka: Path) -> None:
-    """Wyświetla zawartość pliku .tex w bloku kodu (czytelny podgląd w Streamlit)."""
+    """Displays the contents of a .tex file in a code block (readable preview in Streamlit)."""
     if not sciezka.is_file():
-        st.caption(f"Brak pliku: `{sciezka.name}` — uruchom najpierw ewaluację.")
+        st.caption(f"Missing file: `{sciezka.name}` — run the evaluation first.")
         return
     tresc = sciezka.read_text(encoding="utf-8")
     st.code(tresc, language="latex", line_numbers=True)
 
 
 st.set_page_config(
-    page_title="Wine Quality — klasyfikacja",
+    page_title="Wine Quality — classification",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -58,9 +58,9 @@ div[data-testid="stMetricValue"] { font-size: 1.35rem; }
     unsafe_allow_html=True,
 )
 
-st.title("Klasyfikacja jakości wina (Wine Quality)")
+st.title("Wine Quality Classification")
 st.caption(
-    "Zadanie: **klasyfikacja wieloklasowa** — przewidywanie etykiety `quality` na podstawie cech chemicznych."
+    "Task: **multiclass classification** — predicting the `quality` label from chemical features."
 )
 
 csv_szczegol = RESULTS_DIR / "wyniki_szczegolowe.csv"
@@ -68,223 +68,223 @@ csv_agregat = RESULTS_DIR / "wyniki_agregaty_rodzin.csv"
 folder_wykresy = RESULTS_DIR / "wykresy"
 
 with st.sidebar:
-    st.header("Akcje")
-    if st.button("Uruchom ponownie pełną ewaluację", type="primary", use_container_width=True):
-        with st.spinner("Walidacja krzyżowa 5-fold, zapis CSV / LaTeX / wykresów…"):
+    st.header("Actions")
+    if st.button("Re-run full evaluation", type="primary", use_container_width=True):
+        with st.spinner("5-fold cross-validation, saving CSV / LaTeX / charts…"):
             uruchom_pelny_eksperyment()
-        st.success("Zapisano wyniki w katalogu `results/`.")
+        st.success("Results saved to the `results/` directory.")
         st.rerun()
     st.markdown("---")
     st.markdown(
-        "**Uruchomienie z terminala:** `python run_experiment.py`  \n"
-        "**Start z GUI:** `./start.sh` lub `start.bat` — najpierw eksperyment, potem ta aplikacja."
+        "**Run from the terminal:** `python run_experiment.py`  \n"
+        "**Start from GUI:** `./start.sh` or `start.bat` — the experiment first, then this app."
     )
     st.markdown("---")
     st.markdown(
-        "Pełny opis przebiegu badania, definicje pojęć, zgodność z wymaganiami oraz **podgląd plików `.tex`** — zakładka **Opis projektu**."
+        "Full description of the study, definitions of terms, requirements compliance, and a **preview of the `.tex` files** — see the **Project description** tab."
     )
 
 tab_opis, tab_wymogi, tab_dane, tab_wyniki = st.tabs(
-    ["Opis projektu", "Wymogi i metodologia", "Zbiór danych (EDA)", "Wyniki klasyfikacji"]
+    ["Project description", "Requirements & methodology", "Dataset (EDA)", "Classification results"]
 )
 
 with tab_opis:
     st.info(
-        "Poniżej: **cel badania**, **kolejne etapy obliczeń** (co robimy, dlaczego, jaki jest efekt), **definicje pojęć** "
-        "oraz powiązanie z wymaganiami projektu. Szczegóły implementacji (moduły, funkcje) są w zakładce *Wymogi i metodologia*."
+        "Below: the **goal of the study**, the **successive computation stages** (what we do, why, and the effect), **definitions of terms** "
+        "and the link to the project requirements. Implementation details (modules, functions) are in the *Requirements & methodology* tab."
     )
 
-    st.subheader("Cel i zakres porównania")
+    st.subheader("Goal and scope of the comparison")
     st.markdown(
         """
-Zbiór zawiera **próbki wina** opisane cechami numerycznymi (m.in. kwasowość, alkohol) oraz **znaną etykietę jakości**
-`quality` (kilka dyskretnych klas, np. w zakresie od 3 do 8). Zadanie to **klasyfikacja wieloklasowa**: model na podstawie cech
-ma przypisać obserwację do **jednej z klas** — nie estymujemy tu wartości ciągłej, tylko kategorię.
+The dataset contains **wine samples** described by numeric features (e.g. acidity, alcohol) and a **known quality label**
+`quality` (a few discrete classes, e.g. ranging from 3 to 8). The task is **multiclass classification**: based on the features the model
+assigns an observation to **one of the classes** — we are not estimating a continuous value here, only a category.
 
-**Porównujemy** trzy rodziny algorytmów — **drzewo decyzyjne**, **kNN**, **las losowy** — każdy w **trzech wariantach hiperparametrów**
-(łącznie **9** niezależnych klasyfikatorów w pipeline z `MinMaxScaler`). Dodatkowo badamy **zespół Majority Voting**:
-dziewięć klasyfikatorów zwraca każdy swoją klasę; wynik zespołu to **klasa z największą liczbą głosów** (`voting="hard"`).
+**We compare** three algorithm families — **decision tree**, **kNN**, **random forest** — each in **three hyperparameter variants**
+(9 independent classifiers in total, each in a pipeline with `MinMaxScaler`). We additionally study a **Majority Voting ensemble**:
+the nine classifiers each return their class; the ensemble result is the **class with the most votes** (`voting="hard"`).
 """
     )
 
-    st.subheader("Słownik pojęć")
-    with st.expander("Rozwiń tabelę definicji", expanded=True):
+    st.subheader("Glossary of terms")
+    with st.expander("Expand the definitions table", expanded=True):
         st.markdown(
             """
-| Pojęcie | Znaczenie |
+| Term | Meaning |
 |--------|-----------|
-| **Klasyfikacja** | Przypisanie obserwacji do jednej z **dyskretnych klas** (tu: wartość `quality`). |
-| **Cecha (wejście)** | Zmienna opisująca wino (np. alkohol); stanowi wektor **X** używany do uczenia i predykcji. |
-| **Etykieta / klasa (wyjście)** | Kolumna `quality` — wartość, której model ma się nauczyć przewidywać. |
-| **Model** | Funkcja uczona na danych: **cechy → przewidywana klasa**; różne algorytmy mają inną strukturę decyzji. |
-| **Hiperparametry** | Parametry ustawiane przed uczeniem (np. `max_depth`, `n_neighbors`); w projekcie **3 warianty na algorytm**. |
-| **Walidacja 5-fold** | Pięć podziałów train/test; model oceniamy na części danych **niewykorzystanej do treningu** w danej iteracji. |
-| **Stratyfikacja** | W train i test zachowujemy **proporcje klas** zbliżone do całego zbioru — stabilniejsza ocena przy niezbalansowaniu. |
-| **Pipeline ze skalowaniem** | `MinMaxScaler` i klasyfikator w jednym obiekcie: skaler **dopasowuje się tylko do treningu** danej foldy. |
-| **Przeciek danych** | Wykorzystanie informacji z części testowej przy przygotowaniu cech — **zawyża** metryki; pipeline + CV temu zapobiega. |
-| **Majority Voting** | Agregacja głosów 9 klasyfikatorów; wygrywa klasa z **większością** oddanych głosów. |
-| **Accuracy** | Ułamek próbek, w których **przewidywana klasa = rzeczywista** (globalna trafność). |
-| **Balanced accuracy** | Średnia czułości po klasach — **mniej myląca**, gdy klasy mają bardzo różne liczebności. |
-| **Średnia / odchylenie (`mean` / `std`)** | Po 5 foldach: **średnia metryki** oraz **rozrzut** między foldami (miara stabilności). |
+| **Classification** | Assigning an observation to one of the **discrete classes** (here: the `quality` value). |
+| **Feature (input)** | A variable describing the wine (e.g. alcohol); forms the **X** vector used for training and prediction. |
+| **Label / class (output)** | The `quality` column — the value the model is meant to learn to predict. |
+| **Model** | A function trained on the data: **features → predicted class**; different algorithms have different decision structures. |
+| **Hyperparameters** | Parameters set before training (e.g. `max_depth`, `n_neighbors`); in this project, **3 variants per algorithm**. |
+| **5-fold validation** | Five train/test splits; the model is evaluated on the portion of data **not used for training** in a given iteration. |
+| **Stratification** | In train and test we keep the **class proportions** close to the whole dataset — a more stable evaluation under imbalance. |
+| **Pipeline with scaling** | `MinMaxScaler` and the classifier in a single object: the scaler **fits only on the training portion** of a given fold. |
+| **Data leakage** | Using information from the test portion when preparing features — it **inflates** the metrics; the pipeline + CV prevent this. |
+| **Majority Voting** | Aggregation of votes from 9 classifiers; the class with the **majority** of votes wins. |
+| **Accuracy** | The fraction of samples where the **predicted class = the true class** (global correctness). |
+| **Balanced accuracy** | Mean per-class recall — **less misleading** when classes have very different sizes. |
+| **Mean / std (`mean` / `std`)** | Across the 5 folds: the **mean of the metric** and the **spread** between folds (a stability measure). |
 """
         )
 
-    st.subheader("Komponenty repozytorium — co robią i po co są")
+    st.subheader("Repository components — what they do and why")
     st.markdown(
         """
-| Element | Funkcja | Wynik / zapis |
+| Element | Function | Result / output |
 |--------|---------|----------------|
-| **`data/WineQT.csv`** | Dane źródłowe: cechy + etykieta `quality`. | Wejście do `run_experiment.py` i zakładki EDA. |
-| **`run_experiment.py` / przycisk ewaluacji** | Uruchamia pełny pipeline obliczeń od zera. | Katalog `results/` uzupełniony o CSV, TeX, HTML, `wersje_bibliotek.txt`. |
-| **`src/experiment.py`** | Wczytanie, pipeline (skaler + klasyfikator), CV, zespół, `to_latex`. | Tabele numeryczne i pliki `.tex`. |
-| **`src/wykresy.py`** | Wykresy Plotly + eksport HTML. | `results/wykresy/*.html`. |
-| **`wyniki_szczegolowe.*`** | Jedna tabela na wszystkie warianty + zespół. | Metryki `mean`/`std` per model. |
-| **`wyniki_agregaty_rodzin.*`** | Agregacja po rodzinie algorytmu (3 warianty → statystyki). | Średnia i maksimum metryk w obrębie DT / kNN / RF. |
-| **`wersje_bibliotek.txt`** | Zapis wersji bibliotek w momencie generowania wyników. | Ułatwia odtworzenie zbliżonych rezultatów w innym środowisku. |
+| **`data/WineQT.csv`** | Source data: features + the `quality` label. | Input to `run_experiment.py` and the EDA tab. |
+| **`run_experiment.py` / the evaluation button** | Runs the full computation pipeline from scratch. | The `results/` directory filled with CSV, TeX, HTML, `wersje_bibliotek.txt`. |
+| **`src/experiment.py`** | Loading, the pipeline (scaler + classifier), CV, ensemble, `to_latex`. | Numeric tables and `.tex` files. |
+| **`src/wykresy.py`** | Plotly charts + HTML export. | `results/wykresy/*.html`. |
+| **`wyniki_szczegolowe.*`** | A single table for all variants + the ensemble. | `mean`/`std` metrics per model. |
+| **`wyniki_agregaty_rodzin.*`** | Aggregation by algorithm family (3 variants → statistics). | Mean and maximum metrics within DT / kNN / RF. |
+| **`wersje_bibliotek.txt`** | Records the library versions at the moment results are generated. | Makes it easier to reproduce similar results in another environment. |
 """
     )
 
-    st.subheader("Przebieg eksperymentu — kolejne kroki")
+    st.subheader("Experiment flow — successive steps")
     st.markdown(
         """
-1. **Wczytanie CSV** — **Cel:** załadować macierz cech i etykiety. **Efekt:** obiekt danych w pamięci. Kolumna `Id` jest pomijana w uczeniu (identyfikator wiersza).
+1. **Load the CSV** — **Goal:** load the feature matrix and labels. **Effect:** a data object in memory. The `Id` column is ignored during training (it is a row identifier).
 
-2. **Kontrola braków** — **Cel:** upewnić się, że żadna cecha ani `quality` nie jest pusta. **Efekt:** kontynuacja albo przerwanie z komunikatem (bez treningu na uszkodzonych danych).
+2. **Missing-value check** — **Goal:** ensure that no feature nor `quality` is empty. **Effect:** either continue or stop with a message (no training on corrupted data).
 
-3. **Rozdzielenie X i y** — **Cel:** rozdzielić wejście modelu od zmiennej objaśnianej. **Efekt:** macierz cech `X`, wektor klas `y`.
+3. **Split X and y** — **Goal:** separate the model input from the target variable. **Effect:** the feature matrix `X` and the class vector `y`.
 
-4. **Pipeline + CV** — **Cel:** dla każdej z 5 foldów dopasować skaler **tylko na treningu**, potem ocenić klasyfikator na teście. **Efekt:** uczciwa miara bez przecieku; pięć par wyników metryk na wariant.
+4. **Pipeline + CV** — **Goal:** for each of the 5 folds fit the scaler **on the training portion only**, then evaluate the classifier on the test portion. **Effect:** a fair, leakage-free measure; five pairs of metric results per variant.
 
-5. **Uśrednienie po foldach** — **Cel:** zredukować zależność wyniku od jednego losowego podziału. **Efekt:** `accuracy_mean`, `accuracy_std` (i analogicznie dla balanced accuracy).
+5. **Averaging across folds** — **Goal:** reduce the dependence of the result on a single random split. **Effect:** `accuracy_mean`, `accuracy_std` (and analogously for balanced accuracy).
 
-6. **Dziewięć wariantów bazowych** — **Cel:** porównać algorytmy i wpływ hiperparametrów. **Efekt:** wiersze w tabeli szczegółowej dla `dt_*`, `knn_*`, `rf_*`.
+6. **Nine base variants** — **Goal:** compare algorithms and the effect of hyperparameters. **Effect:** rows in the detailed table for `dt_*`, `knn_*`, `rf_*`.
 
-7. **Zespół VotingClassifier** — **Cel:** połączyć głosy 9 klasyfikatorów większością. **Efekt:** wiersz `majority_voting_9` w tabeli wyników.
+7. **VotingClassifier ensemble** — **Goal:** combine the votes of 9 classifiers by majority. **Effect:** the `majority_voting_9` row in the results table.
 
-8. **Agregacja Pandas po rodzinie** — **Cel:** podsumować „typową” i „najlepszą” skuteczność w obrębie DT, kNN, RF. **Efekt:** plik agregatów.
+8. **Pandas aggregation by family** — **Goal:** summarise the “typical” and “best” performance within DT, kNN, RF. **Effect:** the aggregates file.
 
-9. **Eksport** — **Cel:** zapis do raportu i dalszej obróbki. **Efekt:** CSV, LaTeX, HTML w `results/`.
+9. **Export** — **Goal:** save for the report and further processing. **Effect:** CSV, LaTeX, HTML in `results/`.
 """
     )
 
-    st.subheader("Charakterystyka porównywanych algorytmów")
+    st.subheader("Characteristics of the compared algorithms")
     st.markdown(
         """
-| Algorytm | Idea działania | Uwaga merytoryczna |
+| Algorithm | How it works | Substantive note |
 |----------|----------------|---------------------|
-| **Decision Tree** | Reguły warunkowe w postaci drzewa (progi na cechach). | Pojedyncze drzewo bywa wrażliwe na szum; warianty różnią m.in. głębokością. |
-| **kNN** | Klasa z **k** najbliższych obserwacji w przestrzeni cech (po skalowaniu). | Wrażliwy na skalę zmiennych — stąd `MinMaxScaler` w pipeline. |
-| **Random Forest** | Zbiór drzew uczonych na losowych podzbiorach; agregacja wewnątrz modelu. | Zwykle mniejsza wariancja niż pojedyncze drzewo przy podobnym zadaniu. |
-| **Majority Voting (9 klasyfikatorów)** | Zewnętrzna agregacja: głos większości między **różnymi** pipeline’ami. | Wynik zespołu należy interpretować obok najlepszych wariantów pojedynczych — nie zawsze jest wyższy. |
+| **Decision Tree** | Conditional rules in tree form (thresholds on features). | A single tree can be sensitive to noise; the variants differ e.g. in depth. |
+| **kNN** | The class of the **k** nearest observations in feature space (after scaling). | Sensitive to variable scale — hence `MinMaxScaler` in the pipeline. |
+| **Random Forest** | A set of trees trained on random subsets; aggregation inside the model. | Usually lower variance than a single tree on a similar task. |
+| **Majority Voting (9 classifiers)** | External aggregation: majority vote across **different** pipelines. | The ensemble result should be interpreted alongside the best individual variants — it is not always higher. |
 """
     )
 
-    st.subheader("Zakładki aplikacji")
+    st.subheader("Application tabs")
     st.markdown(
         """
-| Zakładka | Zawartość |
+| Tab | Content |
 |----------|-----------|
-| **Opis projektu** | Przebieg badania, definicje, zgodność z wymaganiami, **podgląd `.tex`**. |
-| **Wymogi i metodologia** | Tabela odniesień: wymaganie → plik / mechanizm w kodzie. |
-| **Zbiór danych (EDA)** | Rozkład `quality`, macierz korelacji, podgląd tabeli. |
-| **Wyniki klasyfikacji** | Wykresy metryk z CV, tabele liczb, podgląd i pobranie plików wynikowych. |
+| **Project description** | Study flow, definitions, requirements compliance, **`.tex` preview**. |
+| **Requirements & methodology** | A reference table: requirement → file / mechanism in the code. |
+| **Dataset (EDA)** | `quality` distribution, correlation matrix, table preview. |
+| **Classification results** | Metric charts from CV, numeric tables, preview and download of result files. |
 """
     )
 
-    st.subheader("Zgodność z wymaganiami projektu")
+    st.subheader("Compliance with project requirements")
     st.success(
-        "Poniżej skrót checklisty; szczegóły techniczne i odwołania do kodu: zakładka *Wymogi i metodologia*."
+        "Below is a checklist summary; technical details and code references are in the *Requirements & methodology* tab."
     )
     st.markdown(
         """
-- **Zbiór inny niż Iris** — Wine Quality (`data/WineQT.csv`).
-- **Braki w danych** — weryfikacja przed modelem; brak wartości blokuje eksperyment.
-- **Brak przecieku** — skalowanie w pipeline dopasowywane per fold na treningu.
-- **Odtwarzalność** — `RANDOM_STATE`, ten sam obiekt CV, seed w modelach losowych.
-- **MinMaxScaler** — w pipeline, nie na całym zbiorze przed podziałem na foldy.
-- **Stratyfikowany 5-fold CV** — zachowane proporcje klas między train a test w każdej iteracji.
-- **3 × 3 modele** — Decision Tree, kNN, Random Forest × 3 hiperparametry każdy.
-- **Majority voting** — `VotingClassifier` nad 9 estymatorami.
-- **Metryki** — `accuracy`, `balanced_accuracy`.
-- **Pandas** — agregaty rodzin, eksport `to_latex`.
+- **Dataset other than Iris** — Wine Quality (`data/WineQT.csv`).
+- **Missing data** — verified before modelling; missing values block the experiment.
+- **No leakage** — scaling inside the pipeline, fitted per fold on the training portion.
+- **Reproducibility** — `RANDOM_STATE`, the same CV object, seed in the randomized models.
+- **MinMaxScaler** — inside the pipeline, not on the whole dataset before the fold split.
+- **Stratified 5-fold CV** — class proportions preserved between train and test in each iteration.
+- **3 × 3 models** — Decision Tree, kNN, Random Forest × 3 hyperparameters each.
+- **Majority voting** — `VotingClassifier` over the 9 estimators.
+- **Metrics** — `accuracy`, `balanced_accuracy`.
+- **Pandas** — family aggregates, `to_latex` export.
 """
     )
 
-    st.subheader("Interpretacja metryk w tabelach")
+    st.subheader("Interpreting the metrics in the tables")
     st.markdown(
         """
-- **Accuracy** — ułamek poprawnie sklasyfikowanych próbek (**przewidywana klasa = rzeczywista**). Przy silnym niezbalansowaniu klas sama accuracy może być optymistyczna względem rzadkich klas.
-- **Balanced accuracy** — pośrednia po klasach (średnia czułości); **lepiej odzwierciedla** sytuację, gdy klasy mają bardzo różne liczebności.
-- **`mean`** — średnia metryki z **5 foldów** (punkt odniesienia dla porównań).
-- **`std`** — odchylenie standardowe między foldami (**większe** = większa zmienność wyniku przy zmianie podziału).
+- **Accuracy** — the fraction of correctly classified samples (**predicted class = true class**). Under strong class imbalance, accuracy alone can be optimistic with respect to rare classes.
+- **Balanced accuracy** — the average across classes (mean recall); **better reflects** the situation when classes have very different sizes.
+- **`mean`** — the metric mean over the **5 folds** (a reference point for comparisons).
+- **`std`** — the standard deviation between folds (**larger** = greater variability of the result when the split changes).
 """
     )
 
-    st.subheader("Interpretacja wykresów")
+    st.subheader("Interpreting the charts")
     st.markdown(
         """
-- **Rozkład `quality`** — rozkład liczebności klas; pozwala ocenić **niezbalansowanie** zbioru (wpływa na obie metryki).
-- **Macierz korelacji** — współzmienność cech (Pearson); **eksploracja**, nie wprowadza informacji testowej do skalowania (skalowanie jest w pipeline na treningu).
-- **Porównanie metryk (2 panele)** — średnia z CV; **paski błędu** = `std` między foldami. Oś X: identyfikatory wariantów i zespół.
-- **Agregaty rodzin** — w obrębie DT, kNN, RF: **średnia** i **maksimum** wybranej metryki spośród trzech wariantów hiperparametrów.
+- **`quality` distribution** — the class count distribution; lets you assess the **imbalance** of the dataset (affects both metrics).
+- **Correlation matrix** — feature co-variation (Pearson); **exploration**, it does not introduce test information into scaling (scaling happens in the pipeline on the training portion).
+- **Metric comparison (2 panels)** — the CV mean; **error bars** = `std` between folds. X axis: variant identifiers and the ensemble.
+- **Family aggregates** — within DT, kNN, RF: the **mean** and **maximum** of the chosen metric across the three hyperparameter variants.
 """
     )
 
-    st.subheader("Pliki LaTeX — podgląd treści")
+    st.subheader("LaTeX files — content preview")
     st.markdown(
         """
-Poniżej widać **dokładny tekst** plików wygenerowanych przez program (do wklejenia do pracy w LaTeX).
-W preambule dokumentu przydaje się m.in. `\\usepackage{booktabs}` (dla `\\toprule`, `\\midrule`, `\\bottomrule`).
-Pliki można też pobrać w zakładce **Wyniki klasyfikacji**.
+Below you can see the **exact text** of the files generated by the program (to paste into a LaTeX document).
+In the document preamble it helps to use e.g. `\\usepackage{booktabs}` (for `\\toprule`, `\\midrule`, `\\bottomrule`).
+The files can also be downloaded in the **Classification results** tab.
 """
     )
-    st.markdown("##### `wyniki_szczegolowe.tex` — wszystkie warianty i zespół")
+    st.markdown("##### `wyniki_szczegolowe.tex` — all variants and the ensemble")
     wyswietl_plik_tex(TEX_SZCZEGOLY)
-    st.markdown("##### `wyniki_agregaty_rodzin.tex` — średnie i maksima w rodzinach modeli")
+    st.markdown("##### `wyniki_agregaty_rodzin.tex` — means and maxima within model families")
     wyswietl_plik_tex(TEX_AGREGATY)
 
 with tab_wymogi:
-    st.subheader("Spełnienie wymagań projektu (klasyfikacja)")
+    st.subheader("Meeting the project requirements (classification)")
     st.caption(
-        "Tabela odniesień **wymaganie → implementacja** (moduły, klasy, pliki). Ogólny opis celu i przebiegu: zakładka **Opis projektu**."
+        "A reference table **requirement → implementation** (modules, classes, files). General description of the goal and flow: the **Project description** tab."
     )
     st.markdown(
         """
-| Wymóg | Realizacja w tym repozytorium |
+| Requirement | Implementation in this repository |
 |--------|-------------------------------|
-| Jeden zbiór (nie Iris) | **Wine Quality** — `data/WineQT.csv` (Kaggle) |
-| Sprawdzenie braków | `isna()` przy wczytaniu; brak → wyjątek |
-| Brak przecieku danych | `MinMaxScaler` w `Pipeline` / `ColumnTransformer` — dopasowanie tylko na zbiorze treningowym każdej foldy |
-| Odtwarzalność | `RANDOM_STATE` w `src/config.py`; ten sam obiekt `StratifiedKFold`; seed w modelach losowych |
-| Skalowanie | **MinMaxScaler** (w pipeline, nie na całym zbiorze przed CV) |
-| Walidacja | **Stratyfikowana 5-fold** cross-validation |
-| Modele bazowe | **DecisionTree**, **kNN**, **RandomForest** — **po 3 warianty hiperparametrów** (łącznie 9) |
-| Zespół | **Majority voting** — `VotingClassifier(..., voting="hard")` nad 9 pipeline’ami |
-| Metryki | **accuracy**, **balanced_accuracy** |
-| Pandas | Agregacja średnich/maksimum po rodzinie modelu; `DataFrame.to_latex()` → pliki `.tex` |
+| One dataset (not Iris) | **Wine Quality** — `data/WineQT.csv` (Kaggle) |
+| Missing-value check | `isna()` on load; missing → exception |
+| No data leakage | `MinMaxScaler` inside `Pipeline` / `ColumnTransformer` — fitted only on the training portion of each fold |
+| Reproducibility | `RANDOM_STATE` in `src/config.py`; the same `StratifiedKFold` object; seed in the randomized models |
+| Scaling | **MinMaxScaler** (in the pipeline, not on the whole dataset before CV) |
+| Validation | **Stratified 5-fold** cross-validation |
+| Base models | **DecisionTree**, **kNN**, **RandomForest** — **3 hyperparameter variants each** (9 in total) |
+| Ensemble | **Majority voting** — `VotingClassifier(..., voting="hard")` over the 9 pipelines |
+| Metrics | **accuracy**, **balanced_accuracy** |
+| Pandas | Aggregation of means/maxima by model family; `DataFrame.to_latex()` → `.tex` files |
 """
     )
     st.info(
-        "Szczegóły implementacji: moduł `src/experiment.py` (Pipeline, CV, zespół), "
-        "`src/wykresy.py` (wykresy Plotly)."
+        "Implementation details: the `src/experiment.py` module (Pipeline, CV, ensemble), "
+        "`src/wykresy.py` (Plotly charts)."
     )
 
 with tab_dane:
-    st.subheader("Eksploracja zbioru")
+    st.subheader("Dataset exploration")
     try:
         df_raw = wczytaj_pelna_ramke(DATA_PATH)
     except FileNotFoundError:
-        st.error(f"Brak pliku: {DATA_PATH}")
+        st.error(f"Missing file: {DATA_PATH}")
         st.stop()
     except ValueError as e:
         st.error(str(e))
         st.stop()
 
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Liczba wierszy", str(len(df_raw)))
-    c2.metric("Liczba cech (bez Id)", len([c for c in df_raw.columns if c not in ("Id", "quality")]))
-    c3.metric("Klasy jakości (min–max)", f"{int(df_raw['quality'].min())} – {int(df_raw['quality'].max())}")
-    c4.metric("Brakujące wartości", "0" if not df_raw.isna().any().any() else "tak — sprawdź dane")
+    c1.metric("Number of rows", str(len(df_raw)))
+    c2.metric("Number of features (without Id)", len([c for c in df_raw.columns if c not in ("Id", "quality")]))
+    c3.metric("Quality classes (min–max)", f"{int(df_raw['quality'].min())} – {int(df_raw['quality'].max())}")
+    c4.metric("Missing values", "0" if not df_raw.isna().any().any() else "yes — check the data")
 
     st.plotly_chart(wykres_rozkald_jakosci(df_raw), use_container_width=True)
 
@@ -295,42 +295,42 @@ with tab_dane:
     ]
     st.plotly_chart(wykres_macierz_korelacji(df_raw, kol_num), use_container_width=True)
 
-    with st.expander("Podgląd pierwszych wierszy"):
+    with st.expander("Preview of the first rows"):
         st.dataframe(df_raw.head(15), use_container_width=True)
 
 with tab_wyniki:
     if not csv_szczegol.is_file() or not csv_agregat.is_file():
         st.warning(
-            "Brak gotowych wyników w `results/`. Użyj przycisku w panelu bocznym lub uruchom: `python run_experiment.py`."
+            "No ready results in `results/`. Use the button in the sidebar or run: `python run_experiment.py`."
         )
     else:
         df = pd.read_csv(csv_szczegol)
         agg = pd.read_csv(csv_agregat)
 
-        st.subheader("Porównanie modeli (CV)")
+        st.subheader("Model comparison (CV)")
         st.plotly_chart(wykres_porownanie_metryk(df), use_container_width=True)
         st.plotly_chart(wykres_agregaty_rodzin(agg), use_container_width=True)
 
-        st.subheader("Tabele numeryczne")
-        st.markdown("**Wszystkie warianty + zespół Majority Voting (średnia i std z 5 foldów)**")
+        st.subheader("Numeric tables")
+        st.markdown("**All variants + the Majority Voting ensemble (mean and std over 5 folds)**")
         st.dataframe(df.round(4), use_container_width=True)
-        st.markdown("**Średnie i maksymalne metryki w obrębie rodziny (3 warianty hiperparametrów)**")
+        st.markdown("**Mean and maximum metrics within a family (3 hyperparameter variants)**")
         st.dataframe(agg.round(4), use_container_width=True)
 
-        st.subheader("Pliki LaTeX — podgląd i pobranie")
-        st.markdown("Ten sam podgląd plików `.tex` znajduje się w zakładce **Opis projektu**.")
-        with st.expander("Pokaż treść `wyniki_szczegolowe.tex`", expanded=False):
+        st.subheader("LaTeX files — preview and download")
+        st.markdown("The same `.tex` file preview is available in the **Project description** tab.")
+        with st.expander("Show the content of `wyniki_szczegolowe.tex`", expanded=False):
             wyswietl_plik_tex(TEX_SZCZEGOLY)
-        with st.expander("Pokaż treść `wyniki_agregaty_rodzin.tex`", expanded=False):
+        with st.expander("Show the content of `wyniki_agregaty_rodzin.tex`", expanded=False):
             wyswietl_plik_tex(TEX_AGREGATY)
 
-        st.subheader("Pobieranie plików z `results/`")
+        st.subheader("Download files from `results/`")
         cols = st.columns(3)
         meta = RESULTS_DIR / "wersje_bibliotek.txt"
 
         if TEX_SZCZEGOLY.is_file():
             cols[0].download_button(
-                "Pobierz wyniki_szczegolowe.tex",
+                "Download wyniki_szczegolowe.tex",
                 data=TEX_SZCZEGOLY.read_text(encoding="utf-8"),
                 file_name="wyniki_szczegolowe.tex",
                 mime="text/plain",
@@ -338,7 +338,7 @@ with tab_wyniki:
             )
         if TEX_AGREGATY.is_file():
             cols[1].download_button(
-                "Pobierz wyniki_agregaty_rodzin.tex",
+                "Download wyniki_agregaty_rodzin.tex",
                 data=TEX_AGREGATY.read_text(encoding="utf-8"),
                 file_name="wyniki_agregaty_rodzin.tex",
                 mime="text/plain",
@@ -346,7 +346,7 @@ with tab_wyniki:
             )
         if meta.is_file():
             cols[2].download_button(
-                "Pobierz wersje_bibliotek.txt",
+                "Download wersje_bibliotek.txt",
                 data=meta.read_text(encoding="utf-8"),
                 file_name="wersje_bibliotek.txt",
                 mime="text/plain",
@@ -355,6 +355,6 @@ with tab_wyniki:
 
         if folder_wykresy.is_dir():
             htmls = sorted(folder_wykresy.glob("*.html"))
-            st.markdown("**Wykresy zapisane jako HTML** (generowane przy `run_experiment.py`):")
+            st.markdown("**Charts saved as HTML** (generated by `run_experiment.py`):")
             for h in htmls:
                 st.caption(f"`{h.relative_to(RESULTS_DIR.parent)}`")

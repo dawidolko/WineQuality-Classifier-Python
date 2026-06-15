@@ -1,51 +1,51 @@
-# Klasyfikacja jakości wina — porównanie modeli
+# Wine Quality Classification — Model Comparison
 
-## Krótki opis
+## Short description
 
-- **Zbiór:** [Wine Quality](https://www.kaggle.com/datasets/yasserh/wine-quality-dataset) (`data/WineQT.csv`) — **klasyfikacja wieloklasowa** etykiety `quality` (oceny 3–8, niezbalansowane klasy).
-- **Modele:** `DecisionTree`, `kNN`, `RandomForest` — **po 3 warianty hiperparametrów** (łącznie 9 klasyfikatorów).
-- **Zespół predykcyjny:** `VotingClassifier` z **majority voting** (`voting="hard"`) nad tymi samymi 9 pipeline’ami.
-- **Walidacja:** stratyfikowana **5-fold** CV (`StratifiedKFold(shuffle=True, random_state=42)`).
-- **Metryki:** `accuracy` (odsetek poprawnych predykcji) oraz `balanced_accuracy` (średnia czułość po klasach — ważna przy niezbalansowanym rozkładzie ocen wina).
-- **Stack:** scikit-learn, Pandas (`groupby`, `to_latex`), Plotly (wykresy), Streamlit (opis przebiegu badania, definicje pojęć, zgodność z wymaganiami, podgląd `.tex`).
+- **Dataset:** [Wine Quality](https://www.kaggle.com/datasets/yasserh/wine-quality-dataset) (`data/WineQT.csv`) — **multiclass classification** of the `quality` label (scores 3–8, imbalanced classes).
+- **Models:** `DecisionTree`, `kNN`, `RandomForest` — **3 hyperparameter variants each** (9 classifiers in total).
+- **Prediction ensemble:** `VotingClassifier` with **majority voting** (`voting="hard"`) over the same 9 pipelines.
+- **Validation:** stratified **5-fold** CV (`StratifiedKFold(shuffle=True, random_state=42)`).
+- **Metrics:** `accuracy` (the fraction of correct predictions) and `balanced_accuracy` (mean per-class recall — important given the imbalanced distribution of wine scores).
+- **Stack:** scikit-learn, Pandas (`groupby`, `to_latex`), Plotly (charts), Streamlit (study walkthrough, term definitions, requirements compliance, `.tex` preview).
 
-## Zabezpieczenie przed przeciekiem danych (data leakage)
+## Protection against data leakage
 
-Wszystkie operacje skalowania wykonywane są **wewnątrz** obiektu `Pipeline` (scikit-learn):
+All scaling operations are performed **inside** a scikit-learn `Pipeline` object:
 
 ```
 Pipeline([
     ("preprocess", ColumnTransformer([("num", MinMaxScaler(), feature_cols)])),
-    ("clf", klasyfikator),
+    ("clf", classifier),
 ])
 ```
 
-Dzięki temu `MinMaxScaler` jest **fitowany wyłącznie na folddzie treningowej** — nigdy nie „widzi" danych testowych przed oceną. Przekazanie gotowego `Pipeline` do `cross_validate` gwarantuje to automatycznie dla każdego z 5 podziałów. Szczegóły: [scikit-learn — Common pitfalls](https://scikit-learn.org/stable/common_pitfalls.html).
+Thanks to this, `MinMaxScaler` is **fitted exclusively on the training fold** — it never "sees" the test data before evaluation. Passing a ready `Pipeline` to `cross_validate` guarantees this automatically for each of the 5 splits. Details: [scikit-learn — Common pitfalls](https://scikit-learn.org/stable/common_pitfalls.html).
 
-## Brak brakujących danych
+## No missing data
 
-Funkcja `wczytaj_pelna_ramke` w `src/experiment.py` wywołuje `df.isna().any().any()` i podnosi wyjątek, jeśli znajdzie brakujące wartości — eksperyment nie uruchomi się na niekompletnym zbiorze.
+The `wczytaj_pelna_ramke` function in `src/experiment.py` calls `df.isna().any().any()` and raises an exception if it finds missing values — the experiment will not run on an incomplete dataset.
 
-## Wymagania
+## Requirements
 
-- Python 3.10+ (zalecane)
-- Instalacja: `pip install -r requirements.txt`
+- Python 3.10+ (recommended)
+- Install: `pip install -r requirements.txt`
 
-## Eksperyment (zapis do `results/`)
+## Experiment (writes to `results/`)
 
-Uruchamia walidację, zapisuje m.in. CSV, `.tex`, `wersje_bibliotek.txt` oraz wykresy HTML w `results/wykresy/`.
+Runs the validation and saves, among others, CSV, `.tex`, `wersje_bibliotek.txt` and HTML charts in `results/wykresy/`.
 
 ```bash
 python run_experiment.py
 ```
 
-## Streamlit i skrypty startowe
+## Streamlit and start scripts
 
-Skrypty **`start.sh`** (Linux/macOS) oraz **`start.bat`** (Windows) wykonują po kolei:
+The **`start.sh`** (Linux/macOS) and **`start.bat`** (Windows) scripts run, in order:
 
 1. venv + `pip install -r requirements.txt`
 2. `python run_experiment.py`
-3. `streamlit run streamlit_app.py` → zwykle `http://localhost:8501`
+3. `streamlit run streamlit_app.py` → usually `http://localhost:8501`
 
 ```bash
 chmod +x start.sh
@@ -56,41 +56,41 @@ chmod +x start.sh
 start.bat
 ```
 
-### Zakładki aplikacji
+### Application tabs
 
-| Zakładka | Treść |
+| Tab | Content |
 |----------|--------|
-| **Opis projektu** | Cel badania, przebieg eksperymentu (co → po co → efekt), słownik pojęć, zgodność z wymaganiami, **podgląd plików LaTeX** |
-| **Wymogi i metodologia** | Tabela: wymaganie → realizacja w kodzie / plikach |
-| **Zbiór danych (EDA)** | Rozkład klasy `quality`, macierz korelacji, podgląd danych |
-| **Wyniki klasyfikacji** | Wykresy metryk z CV, tabele, podgląd i pobieranie wyników |
+| **Project description** | Study goal, experiment flow (what → why → effect), glossary of terms, requirements compliance, **LaTeX file preview** |
+| **Requirements & methodology** | Table: requirement → implementation in code / files |
+| **Dataset (EDA)** | `quality` class distribution, correlation matrix, data preview |
+| **Classification results** | CV metric charts, tables, preview and download of results |
 
-## Odtwarzalność wyników (reproducibility)
+## Reproducibility
 
-Zgodnie z wymaganiem [scikit-learn — Getting reproducible results](https://scikit-learn.org/stable/common_pitfalls.html):
+In line with the requirement [scikit-learn — Getting reproducible results](https://scikit-learn.org/stable/common_pitfalls.html):
 
-- Jeden stały seed: `RANDOM_STATE = 42` w `src/config.py`; przekazany do każdego klasyfikatora (`random_state`) oraz do `StratifiedKFold(shuffle=True, random_state=RANDOM_STATE)`.
-- `StratifiedKFold` z `shuffle=True` wymaga seeda — bez niego kolejność próbek po tasowaniu byłaby inna przy każdym uruchomieniu.
-- Ten sam obiekt `cv` przekazywany jest do każdego wywołania `cross_validate`, co gwarantuje identyczne podziały dla wszystkich modeli.
-- Plik `results/wersje_bibliotek.txt` zapisuje wersje scikit-learn, numpy i pandas przy generowaniu wyników — umożliwia odtworzenie środowiska.
+- One fixed seed: `RANDOM_STATE = 42` in `src/config.py`; passed to every classifier (`random_state`) and to `StratifiedKFold(shuffle=True, random_state=RANDOM_STATE)`.
+- `StratifiedKFold` with `shuffle=True` requires a seed — without it the sample order after shuffling would differ on every run.
+- The same `cv` object is passed to each `cross_validate` call, which guarantees identical splits for all models.
+- The `results/wersje_bibliotek.txt` file records the versions of scikit-learn, numpy and pandas when the results are generated — making it possible to reproduce the environment.
 
-## Struktura repozytorium
+## Repository structure
 
-| Ścieżka | Opis |
+| Path | Description |
 |---------|------|
-| `data/WineQT.csv` | Dane źródłowe |
-| `src/config.py` | Ścieżki, seed |
-| `src/experiment.py` | Pipeline, CV, zespół, eksport CSV/LaTeX, wywołanie wykresów |
-| `src/wykresy.py` | Wykresy Plotly + zapis HTML |
-| `run_experiment.py` | Wejście z linii poleceń |
-| `streamlit_app.py` | Aplikacja WWW |
-| `start.sh` / `start.bat` | Eksperyment + Streamlit |
-| `results/` | Wyniki wygenerowane (CSV, TeX, `wykresy/*.html`, `wersje_bibliotek.txt`) |
+| `data/WineQT.csv` | Source data |
+| `src/config.py` | Paths, seed |
+| `src/experiment.py` | Pipeline, CV, ensemble, CSV/LaTeX export, chart invocation |
+| `src/wykresy.py` | Plotly charts + HTML export |
+| `run_experiment.py` | Command-line entry point |
+| `streamlit_app.py` | Web application |
+| `start.sh` / `start.bat` | Experiment + Streamlit |
+| `results/` | Generated results (CSV, TeX, `wykresy/*.html`, `wersje_bibliotek.txt`) |
 
 ## `.gitignore`
 
-Ignorowane są m.in. `.venv/`, cache Pythona, pliki IDE. **Wygenerowane pliki w `results/`** można opcjonalnie dodać do ignorowania — w `.gitignore` jest gotowy, zakomentowany blok instrukcji.
+Ignored items include `.venv/`, Python cache, and IDE files. **Generated files in `results/`** can optionally be added to the ignore list — `.gitignore` contains a ready, commented-out block with instructions.
 
-## Licencja
+## License
 
-Zobacz plik `LICENSE`.
+See the `LICENSE` file.

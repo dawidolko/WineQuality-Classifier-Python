@@ -1,5 +1,5 @@
 @echo off
-REM Uruchamia aplikacje Streamlit z katalogu projektu (Windows).
+REM Runs the Streamlit app from the project directory (Windows).
 cd /d "%~dp0"
 
 if not exist .venv (
@@ -9,14 +9,14 @@ call .venv\Scripts\activate.bat
 python -m pip install --upgrade pip -q
 pip install -r requirements.txt -q
 
-echo === 1/2: Pelna ewaluacja: 5-fold CV, CSV, LaTeX, wykresy HTML ===
+echo === 1/2: Full evaluation: 5-fold CV, CSV, LaTeX, HTML charts ===
 python run_experiment.py
 if errorlevel 1 (
-  echo Blad podczas eksperymentu — sprawdz komunikat powyzej.
+  echo Error during the experiment - check the message above.
   pause
   exit /b 1
 )
 
 echo.
-echo === 2/2: Aplikacja Streamlit — http://localhost:8501 ===
+echo === 2/2: Streamlit app — http://localhost:8501 ===
 streamlit run streamlit_app.py

@@ -1,9 +1,9 @@
 """
-Logika eksperymentu: wczytanie danych, modele w Pipeline (MinMaxScaler + klasyfikator),
-stratyfikowana walidacja krzyżowa 5-fold, zespół Majority Voting, eksport do LaTeX.
+Experiment logic: data loading, models inside a Pipeline (MinMaxScaler + classifier),
+stratified 5-fold cross-validation, a Majority Voting ensemble, export to LaTeX.
 
-Brak przecieku: skalowanie jest wewnątrz Pipeline, więc dopasowanie MinMaxScaler
-odbywa się wyłącznie na zbiorze treningowym każdej foldy walidacji.
+No leakage: scaling happens inside the Pipeline, so MinMaxScaler is fitted
+exclusively on the training fold of each validation split.
 """
 
 from __future__ import annotations
@@ -31,19 +31,19 @@ warnings.filterwarnings("ignore", category=UserWarning)
 
 def wczytaj_pelna_ramke(sciezka: Path) -> pd.DataFrame:
     """
-    Wczytuje pełny CSV (wszystkie kolumny) do analizy eksploracyjnej i wykresów.
+    Loads the full CSV (all columns) for exploratory analysis and plotting.
 
-    Ponownie sprawdza brakujące wartości — spójnie z treningiem.
+    Re-checks for missing values — consistently with training.
     """
     df = pd.read_csv(sciezka)
     if df.isna().any().any():
-        raise ValueError("Wykryto brakujące wartości w zbiorze — usuń lub uzupełnij je przed treningiem.")
+        raise ValueError("Missing values detected in the dataset — remove or impute them before training.")
     return df
 
 
 def podziel_na_cechy_i_etykiete(df: pd.DataFrame) -> tuple[pd.DataFrame, np.ndarray, list[str]]:
     """
-    Z pełnej ramki CSV wycina macierz cech X (bez Id i quality) oraz wektor etykiet y (klasy jakości).
+    Splits the full CSV frame into a feature matrix X (without Id and quality) and a label vector y (quality classes).
     """
     feature_cols = [c for c in df.columns if c not in ("quality", "Id")]
     X = df[feature_cols]
@@ -53,14 +53,14 @@ def podziel_na_cechy_i_etykiete(df: pd.DataFrame) -> tuple[pd.DataFrame, np.ndar
 
 def wczytaj_i_sprawdz_dane(sciezka: Path) -> tuple[pd.DataFrame, np.ndarray, list[str]]:
     """
-    Wczytuje plik CSV ze zbiorem WineQT.
+    Loads the WineQT CSV dataset.
 
-    Zwraca:
-        ramkę z cechami (bez kolumny etykiety i identyfikatora Id),
-        wektor etykiet jakości wina (klasy dyskretne),
-        listę nazw kolumn cech.
+    Returns:
+        a frame of features (without the label column and the Id identifier),
+        a vector of wine quality labels (discrete classes),
+        a list of feature column names.
 
-    Sprawdza brakujące wartości; w razie wykrycia podnosi wyjątek.
+    Checks for missing values; raises an exception if any are found.
     """
     df = wczytaj_pelna_ramke(sciezka)
     return podziel_na_cechy_i_etykiete(df)
@@ -71,11 +71,12 @@ def utworz_pipeline_z_minmax(
     nazwy_kolumn_cech: list[str],
 ) -> Pipeline:
     """
-    Buduje Pipeline: najpierw skalowanie MinMax do [0, 1] tylko na cechach numerycznych,
-    potem przekazany klasyfikator.
+    Builds a Pipeline: first MinMax scaling to [0, 1] applied only to numeric features,
+    then the supplied classifier.
 
-    ColumnTransformer z jednym blokiem ('num', MinMaxScaler, columns) pozwala w przyszłości
-    dodać inne typy cech bez zmiany zasady: dopasowanie zawsze wewnątrz CV na train.
+    A ColumnTransformer with a single block ('num', MinMaxScaler, columns) makes it possible
+    to add other feature types later without changing the principle: fitting always happens
+    inside CV on the training split.
     """
     preproc = ColumnTransformer(
         transformers=[("num", MinMaxScaler(), nazwy_kolumn_cech)],
@@ -86,10 +87,10 @@ def utworz_pipeline_z_minmax(
 
 def definicja_modeli_bazowych() -> list[tuple[str, Any]]:
     """
-    Zwraca listę (nazwa, surowy_estymator) dla 9 wariantów:
+    Returns a list of (name, raw_estimator) for the 9 variants:
     Decision Tree × 3, kNN × 3, Random Forest × 3.
 
-    Hiperparametry są celowo proste (3 warianty na algorytm), żeby porównanie było czytelne.
+    The hyperparameters are deliberately simple (3 variants per algorithm) to keep the comparison readable.
     """
     drzewa = [
         ("dt_gleb_5", DecisionTreeClassifier(max_depth=5, min_samples_leaf=2, random_state=RANDOM_STATE)),
@@ -110,14 +111,14 @@ def definicja_modeli_bazowych() -> list[tuple[str, Any]]:
 
 
 def rodzina_z_nazwy(nazwa: str) -> str:
-    """Mapuje nazwę wariantu na rodzinę modelu (do tabel grupowych)."""
+    """Maps a variant name to a model family (for grouped tables)."""
     if nazwa.startswith("dt_"):
         return "DecisionTree"
     if nazwa.startswith("knn_"):
         return "kNN"
     if nazwa.startswith("rf_"):
         return "RandomForest"
-    return "Inne"
+    return "Other"
 
 
 def uruchom_walidacje(
@@ -126,15 +127,15 @@ def uruchom_walidacje(
     nazwy_cech: list[str],
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
-    Dla każdego modelu bazowego (Pipeline) oraz zespołu Majority Voting wykonuje
-    stratyfikowaną 5-krotną walidację krzyżową.
+    Runs stratified 5-fold cross-validation for every base model (Pipeline)
+    and for the Majority Voting ensemble.
 
-    Metryki: accuracy oraz balanced_accuracy (średnia czułości po klasach).
+    Metrics: accuracy and balanced_accuracy (mean per-class recall).
 
-    Zwraca trzy ramki:
-        szczegółowa — jeden wiersz na model z średnią i odchyleniem std,
-        agregaty rodzin — max i średnia metryk w obrębie DecisionTree / kNN / RF,
-        wynik zespołu — jeden wiersz dla VotingClassifier.
+    Returns three frames:
+        detailed — one row per model with the mean and std,
+        family aggregates — max and mean of metrics within DecisionTree / kNN / RF,
+        ensemble result — one row for the VotingClassifier.
     """
     cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=RANDOM_STATE)
 
@@ -163,7 +164,7 @@ def uruchom_walidacje(
 
     szczegoly = pd.DataFrame(wiersze)
 
-    # Zespół: głosowanie większościowe po 9 składowych (każdy to osobny Pipeline)
+    # Ensemble: majority voting over the 9 components (each a separate Pipeline)
     estimators: list[tuple[str, Pipeline]] = []
     for nazwa, clf in definicja_modeli_bazowych():
         estimators.append((nazwa, utworz_pipeline_z_minmax(clf, nazwy_cech)))
@@ -188,7 +189,7 @@ def uruchom_walidacje(
     }
     szczegoly = pd.concat([szczegoly, pd.DataFrame([wiersz_zespol])], ignore_index=True)
 
-    # Agregaty po rodzinie (tylko modele bazowe, bez zespołu)
+    # Aggregates by family (base models only, without the ensemble)
     bazowe = szczegoly[szczegoly["rodzina"] != "Ensemble"].copy()
     grupy = bazowe.groupby("rodzina", as_index=False).agg(
         accuracy_srednia=("accuracy_mean", "mean"),
@@ -206,9 +207,9 @@ def zapisz_latex(
     katalog: Path,
 ) -> None:
     """
-    Zapisuje tabele w formacie LaTeX przy użyciu pandas.DataFrame.to_latex.
+    Saves tables in LaTeX format using pandas.DataFrame.to_latex.
 
-    Pliki trafiają do katalogu results/ (tworzony jeśli nie istnieje).
+    Files are written to the results/ directory (created if it does not exist).
     """
     katalog.mkdir(parents=True, exist_ok=True)
     fmt = "%.4f"
@@ -217,8 +218,8 @@ def zapisz_latex(
         katalog / "wyniki_szczegolowe.tex",
         index=False,
         float_format=fmt,
-        caption="Walidacja krzyzowa (5-fold): accuracy i balanced accuracy — warianty i zespol.",
-        label="tab:szczegolowe",
+        caption="Cross-validation (5-fold): accuracy and balanced accuracy — variants and ensemble.",
+        label="tab:detailed",
         escape=True,
     )
 
@@ -226,18 +227,18 @@ def zapisz_latex(
         katalog / "wyniki_agregaty_rodzin.tex",
         index=False,
         float_format=fmt,
-        caption="Srednie i maksymalne accuracy / balanced accuracy w obrebie rodziny (3 warianty).",
-        label="tab:agregaty",
+        caption="Mean and maximum accuracy / balanced accuracy within a family (3 variants).",
+        label="tab:aggregates",
         escape=True,
     )
 
 
 def uruchom_pelny_eksperyment(sciezka_danych: Path | None = None) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
-    Główny punkt wejścia logiki: wczytanie danych, ewaluacja, zapis CSV i LaTeX.
+    Main entry point of the logic: data loading, evaluation, CSV and LaTeX export.
 
-    Zwraca trzy ramki Pandas (szczegóły, agregaty rodzin, wiersz zespołu w osobnej ramce
-    ostatniej — tutaj ostatnia ramka jest tylko jednym wierszem zespołu; szczegóły zawierają też zespół).
+    Returns three Pandas frames (details, family aggregates, and the ensemble row in a separate last
+    frame — here the last frame is only the single ensemble row; the detailed frame also includes the ensemble).
     """
     path = sciezka_danych or DATA_PATH
     df_pelny = wczytaj_pelna_ramke(path)
@@ -252,7 +253,7 @@ def uruchom_pelny_eksperyment(sciezka_danych: Path | None = None) -> tuple[pd.Da
 
     meta = RESULTS_DIR / "wersje_bibliotek.txt"
     meta.write_text(
-        "Odtwarzalnosc: ten plik zapisuje wersje bibliotek przy generowaniu wynikow.\n"
+        "Reproducibility: this file records the library versions used when generating the results.\n"
         f"scikit-learn {sklearn.__version__}\n"
         f"numpy {np.__version__}\n"
         f"pandas {pd.__version__}\n",
