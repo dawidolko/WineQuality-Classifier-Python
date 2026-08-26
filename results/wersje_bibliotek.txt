@@ -1,4 +1,4 @@
-Odtwarzalnosc: ten plik zapisuje wersje bibliotek przy generowaniu wynikow.
-scikit-learn 1.8.0
-numpy 2.4.4
+Reproducibility: this file records the library versions used when generating the results.
+scikit-learn 1.9.0
+numpy 2.5.2
 pandas 2.3.3

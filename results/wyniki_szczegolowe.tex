@@ -1,20 +1,20 @@
 \begin{table}
-\caption{Walidacja krzyzowa (5-fold): accuracy i balanced accuracy — warianty i zespol.}
-\label{tab:szczegolowe}
+\caption{Cross-validation (5-fold): accuracy and balanced accuracy — variants and ensemble.}
+\label{tab:detailed}
 \begin{tabular}{llrrrr}
 \toprule
 model & rodzina & accuracy\_mean & accuracy\_std & balanced\_accuracy\_mean & balanced\_accuracy\_std \\
 \midrule
 dt\_gleb\_5 & DecisionTree & 0.5660 & 0.0069 & 0.2738 & 0.0115 \\
-dt\_gleb\_15 & DecisionTree & 0.5940 & 0.0161 & 0.3053 & 0.0205 \\
-dt\_gleb\_25 & DecisionTree & 0.5625 & 0.0183 & 0.2717 & 0.0129 \\
+dt\_gleb\_15 & DecisionTree & 0.5958 & 0.0159 & 0.3076 & 0.0178 \\
+dt\_gleb\_25 & DecisionTree & 0.5608 & 0.0252 & 0.2693 & 0.0193 \\
 knn\_k5 & kNN & 0.5521 & 0.0241 & 0.2621 & 0.0214 \\
 knn\_k11 & kNN & 0.6387 & 0.0224 & 0.3421 & 0.0287 \\
 knn\_k21 & kNN & 0.5739 & 0.0218 & 0.2625 & 0.0129 \\
-rf\_50 & RandomForest & 0.6483 & 0.0227 & 0.3216 & 0.0335 \\
-rf\_100 & RandomForest & 0.6571 & 0.0263 & 0.3446 & 0.0336 \\
-rf\_200 & RandomForest & 0.6719 & 0.0326 & 0.3530 & 0.0375 \\
-majority\_voting\_9 & Ensemble & 0.6597 & 0.0172 & 0.3283 & 0.0286 \\
+rf\_50 & RandomForest & 0.6483 & 0.0227 & 0.3215 & 0.0331 \\
+rf\_100 & RandomForest & 0.6597 & 0.0243 & 0.3457 & 0.0330 \\
+rf\_200 & RandomForest & 0.6711 & 0.0331 & 0.3527 & 0.0374 \\
+majority\_voting\_9 & Ensemble & 0.6597 & 0.0190 & 0.3283 & 0.0291 \\
 \bottomrule
 \end{tabular}
 \end{table}

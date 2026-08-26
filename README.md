@@ -30,6 +30,13 @@ The project is built around methodological rigour rather than leaderboard chasin
 
 ## 📊 Results & Visualizations
 
+### Streamlit dashboard
+
+[<img src="docs/screenshots/dashboard.webp" alt="The Streamlit dashboard showing the project description tab with the study goal, comparison scope and a glossary of terms" width="80%"/>](docs/screenshots/dashboard.webp)
+
+_Captured from the container built by `.tools/docker/docker-compose.yml`._
+
+
 All charts below are produced by `python run_experiment.py` and written to `results/`. Interactive Plotly versions of the same figures are saved as standalone HTML under `results/wykresy/`.
 
 | Class distribution | Correlation matrix |
@@ -108,8 +115,29 @@ Validation is identical for every row: `StratifiedKFold(n_splits=5, shuffle=True
 
 ### Prerequisites
 
+- **Docker** — for the containerised path below (recommended)
+
 - **Python 3.10+** (recommended)
 - **pip** and the ability to create a virtual environment
+
+### Run with Docker (recommended)
+
+The container installs the scientific stack, runs the experiment and serves the
+dashboard in one step — no local Python setup and no virtual environment:
+
+```bash
+docker compose -f .tools/docker/docker-compose.yml up --build
+```
+
+The dashboard is then available at **http://localhost:8501**.
+
+Generated artefacts (`results/`, `data/`) are bind-mounted back to the host, so
+charts and metrics written inside the container survive it being removed. Stop
+the stack with:
+
+```bash
+docker compose -f .tools/docker/docker-compose.yml down
+```
 
 ### 1. Clone the Repository
 
