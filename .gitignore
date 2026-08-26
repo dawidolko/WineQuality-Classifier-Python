@@ -44,3 +44,6 @@ Thumbs.db
 # results/*.tex
 # results/wersje_bibliotek.txt
 # results/wykresy/
+
+# Machine-local Claude settings
+.claude/settings.local.json
