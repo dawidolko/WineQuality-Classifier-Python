@@ -1,6 +1,6 @@
 """
-Generator prezentacji PowerPoint dla projektu Wine Quality (temat 7).
-Wersja rozszerzona — wyjaśnienia przystępne dla laika.
+PowerPoint presentation generator for the Wine Quality project (topic 7).
+Extended version - explanations accessible to a layperson.
 """
 
 from pathlib import Path
@@ -68,7 +68,7 @@ def add_text(slide, x, y, w, h, text, size=18, bold=False, color=NAVY,
 
 def add_paragraph(slide, x, y, w, h, text, size=14, color=NAVY,
                   align=PP_ALIGN.LEFT, line_spacing=1.2):
-    """Akapit zwykłego tekstu — do dłuższych opisów."""
+    """Paragraph of plain text - for longer descriptions."""
     tb = slide.shapes.add_textbox(x, y, w, h)
     tf = tb.text_frame
     tf.word_wrap = True
@@ -109,7 +109,7 @@ def add_bullets(slide, x, y, w, h, items, size=14, color=NAVY,
 
 def add_info_box(slide, x, y, w, h, title, body,
                  title_color=WINE, body_color=NAVY, bg=WHITE):
-    """Pudełko z tytułem i akapitem opisu — dobre do wyjaśniania pojęć."""
+    """Box with a title and a description paragraph - good for explaining concepts."""
     box = add_rect(slide, x, y, w, h, bg)
     box.line.color.rgb = title_color
     box.line.width = Pt(1.25)
@@ -150,7 +150,7 @@ def base_slide(title, subtitle=None, page=None):
 
 
 # ============================================================
-# SLAJD 1 — TYTUŁ
+# SLIDE 1 - TITLE
 # ============================================================
 s = prs.slides.add_slide(BLANK)
 add_rect(s, 0, 0, SW, SH, NAVY)
@@ -183,7 +183,7 @@ add_text(s, Inches(0.8), Inches(6.3), SW - Inches(1.6), Inches(0.4),
          size=12, color=LIGHT, align=PP_ALIGN.CENTER)
 
 # ============================================================
-# SLAJD 2 — O CO CHODZI W TYM PROJEKCIE (NOWY — wprowadzenie dla laika)
+# SLIDE 2 - WHAT THIS PROJECT IS ABOUT (NEW - introduction for a layperson)
 # ============================================================
 s = base_slide("O czym właściwie jest ten projekt?",
                "Krótkie wyjaśnienie dla osoby bez znajomości uczenia maszynowego",
@@ -261,7 +261,7 @@ add_bullets(s, Inches(6.9), Inches(1.3), Inches(6), Inches(5.5),
             agenda_right, size=15)
 
 # ============================================================
-# SLAJD 4 — TREŚĆ TEMATU
+# SLIDE 4 - TOPIC STATEMENT
 # ============================================================
 s = base_slide("Treść tematu nr 7 — co dokładnie polecono nam zrobić?",
                "Cytat z polecenia + tłumaczenie na język codzienny",
@@ -306,7 +306,7 @@ add_bullets(s, Inches(0.7), Inches(5.1), Inches(12), Inches(2.2),
             real, size=13)
 
 # ============================================================
-# SLAJD 5 — ZBIÓR DANYCH
+# SLIDE 5 - DATASET
 # ============================================================
 s = base_slide("Zbiór danych — Wine Quality",
                "1143 próbek wina czerwonego z 11 pomiarów chemicznych",
@@ -358,7 +358,7 @@ add_text(s, Inches(0.7), Inches(6.7), Inches(12), Inches(0.4),
          size=12, color=GRAY, italic=True)
 
 # ============================================================
-# SLAJD 6 — SŁOWNIK POJĘĆ (NOWY — dla laika)
+# SLIDE 6 - GLOSSARY (NEW - for a layperson)
 # ============================================================
 s = base_slide("Słownik pojęć — co znaczą hasła używane w projekcie?",
                "Krótkie definicje przed wejściem w szczegóły",
@@ -400,7 +400,7 @@ for i, (t, d) in enumerate(terms_right):
     add_info_box(s, Inches(6.75), y, col_w, row_h, t, d)
 
 # ============================================================
-# SLAJD 7 — ROZKŁAD JAKOŚCI
+# SLIDE 7 - QUALITY DISTRIBUTION
 # ============================================================
 s = base_slide("Eksploracja danych — jak wyglądają oceny wina w zbiorze?",
                "Wykres rozkładu kolumny „quality”",
@@ -431,7 +431,7 @@ add_paragraph(s, Inches(9.0), Inches(6.1), Inches(4.0), Inches(1.0),
               size=10, color=GRAY)
 
 # ============================================================
-# SLAJD 8 — KORELACJE
+# SLIDE 8 - CORRELATIONS
 # ============================================================
 s = base_slide("Eksploracja — które cechy idą w parze z jakością?",
                "Macierz korelacji (współczynnik Pearsona)",
@@ -460,7 +460,7 @@ add_bullets(s, Inches(8.2), Inches(3.85), Inches(4.7), Inches(3.3),
             size=11)
 
 # ============================================================
-# SLAJD 9 — ARCHITEKTURA
+# SLIDE 9 - ARCHITECTURE
 # ============================================================
 s = base_slide("Architektura rozwiązania — jak działa cały eksperyment?",
                "Pięć kroków od pliku CSV do tabel z wynikami",
@@ -585,7 +585,7 @@ add_paragraph(s, Inches(0.7), Inches(5.8), Inches(12), Inches(1.5),
               size=12, line_spacing=1.25)
 
 # ============================================================
-# SLAJD 11 — MODELE BAZOWE
+# SLIDE 11 - BASELINE MODELS
 # ============================================================
 s = base_slide("Trzy rodziny modeli — kto jak myśli?",
                "Każda rodzina to inny sposób uczenia się; każdą testujemy w 3 wariantach",
@@ -648,7 +648,7 @@ family_box(s, Inches(8.8), Inches(1.25), Inches(4.1), Inches(6.0),
            "ale wolniej. Każde drzewo pomaga się nawzajem korygować.")
 
 # ============================================================
-# SLAJD 12 — STRATYFIKOWANA CV
+# SLIDE 12 - STRATIFIED CV
 # ============================================================
 s = base_slide("Walidacja krzyżowa 5-fold — uczciwy test modelu",
                "Każdy model oceniany na 5 niezależnych podziałach danych",
@@ -780,7 +780,7 @@ add_text(s, Inches(0.7), Inches(6.85), Inches(12), Inches(0.4),
          size=12, bold=True, color=NAVY, font="Consolas", align=PP_ALIGN.CENTER)
 
 # ============================================================
-# SLAJD 14 — WYCIEK DANYCH (KLUCZOWY)
+# SLIDE 14 - DATA LEAKAGE (KEY)
 # ============================================================
 s = base_slide("Wyciek danych (data leakage) — najczęstszy błąd w uczeniu maszynowym",
                "Czym jest, dlaczego psuje wyniki i jak go uniknięto w tym projekcie",
@@ -855,7 +855,7 @@ add_bullets(s, Inches(0.7), Inches(5.15), Inches(12), Inches(2.2),
             checks, size=12, bullet_color=GREEN)
 
 # ============================================================
-# SLAJD 15 — ODTWARZALNOŚĆ
+# SLIDE 15 - REPRODUCIBILITY
 # ============================================================
 s = base_slide("Odtwarzalność wyników (reproducibility)",
                "Każdy uruchamiający projekt powinien dostać IDENTYCZNE liczby",
@@ -902,7 +902,7 @@ add_paragraph(s, Inches(0.7), Inches(6.3), Inches(12), Inches(1.0),
               size=12, line_spacing=1.25)
 
 # ============================================================
-# SLAJD 16 — PORÓWNANIE MODELI (wykres)
+# SLIDE 16 - MODEL COMPARISON (chart)
 # ============================================================
 s = base_slide("Wyniki — porównanie 9 modeli + zespołu",
                "Średnia z 5 foldów ± odchylenie standardowe (paski błędu)",
@@ -918,7 +918,7 @@ add_paragraph(s, Inches(0.4), Inches(6.3), Inches(12.5), Inches(0.9),
               size=11, color=GRAY, line_spacing=1.2)
 
 # ============================================================
-# SLAJD 17 — TABELA SZCZEGÓŁOWA
+# SLIDE 17 - DETAILED TABLE
 # ============================================================
 s = base_slide("Wyniki szczegółowe — tabela liczb",
                "Wszystkie 10 wierszy (9 modeli bazowych + zespół Majority Voting)",
@@ -992,7 +992,7 @@ add_paragraph(s, Inches(0.5), Inches(6.4), Inches(12.3), Inches(0.7),
               size=11, color=GRAY, line_spacing=1.25)
 
 # ============================================================
-# SLAJD 18 — AGREGATY + INTERPRETACJA
+# SLIDE 18 - AGGREGATES + INTERPRETATION
 # ============================================================
 s = base_slide("Ranking rodzin modeli + interpretacja wyników",
                "Średnie i maksima dla każdej z 3 rodzin",
@@ -1034,7 +1034,7 @@ add_bullets(s, Inches(0.5), Inches(5.05), Inches(12.3), Inches(2.2),
             obs, size=11)
 
 # ============================================================
-# SLAJD 19 — ARTEFAKTY + STREAMLIT
+# SLIDE 19 - ARTIFACTS + STREAMLIT
 # ============================================================
 s = base_slide("Wygenerowane artefakty + aplikacja Streamlit",
                "Wszystko co tworzy projekt — i jak to oglądać",
@@ -1099,7 +1099,7 @@ for i, (t, d) in enumerate(tabs):
     y_cur += Inches(1.05)
 
 # ============================================================
-# SLAJD 20 — PODSUMOWANIE
+# SLIDE 20 - SUMMARY
 # ============================================================
 s = base_slide("Podsumowanie projektu",
                "Co udało się zrobić — najważniejsze wnioski",
